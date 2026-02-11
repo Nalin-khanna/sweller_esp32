@@ -50,21 +50,22 @@ enum MenuState { MENU_TEACHER_LIST, MENU_TEACHER_SELECTED, MENU_RECORDING };
 MenuState currentMenu = MENU_TEACHER_LIST;
 int selectedTeacher = 0;
 
-struct wav_header_t {
-  char riff[4]; 
-  uint32_t flength; 
-  char wave[4]; 
-  char fmt[4]; 
+typedef struct __attribute__((packed)) {
+  char riff[4];
+  uint32_t flength;
+  char wave[4];
+  char fmt[4];
   uint32_t chunk_size;
-  uint16_t format_tag; 
-  uint16_t num_chans; 
-  uint32_t srate; 
+  uint16_t format_tag;
+  uint16_t num_chans;
+  uint32_t srate;
   uint32_t bytes_per_sec;
-  uint16_t bytes_per_samp; 
-  uint16_t bits_per_samp; 
-  char data[4]; 
+  uint16_t bytes_per_samp;
+  uint16_t bits_per_samp;
+  char data[4];
   uint32_t dlength;
-};
+} wav_header_t;
+
 
 void initI2S() {
   i2s_config_t i2s_config = {
@@ -124,8 +125,8 @@ void updateWavHeader(File &file) {
     Serial.println("ERROR: Cannot update WAV header - invalid file");
     return;
   }
-  
-  unsigned long fileSize = file.size();
+  file.flush();
+  uint32_t fileSize = file.size();
   
   if (fileSize < 44) {
     Serial.println("ERROR: File too small for WAV header");
@@ -371,6 +372,7 @@ void recordAudio(String teacherName) {
   Serial.println("Buffers freed");
   
   // Update WAV header with final file size
+  file.flush();
   updateWavHeader(file);
   file.close();
   
